@@ -1,4 +1,6 @@
 #include "thread.hpp"
+#include <functional>
+#include <memory>
 
 /*
  Method: 
@@ -21,8 +23,10 @@ Thread::Thread(uint16_t id) {
    This method allows the thread to simulate "work"
 */
 
-void Thread::doWork(auto& sem) {
+void Thread::doWork(std::counting_semaphore<SLOTS>& sem) {
     using namespace std::literals::chrono_literals;
+
+    std::cout << id << ": Hello!" << std::endl;
 
     while (true) {
       // -- SEMAPHORE: acquires here, waits until signaled
@@ -36,7 +40,6 @@ void Thread::doWork(auto& sem) {
       
       // -- SEMAPHORE: release lock here --
       sem.release();
-
     }
 }
 
@@ -58,8 +61,9 @@ uint16_t Thread::getID() {
  Desc:
    Creates instance of thread and pass this instance as the parameter
 */
-void Thread::run(auto& sem) {
-    _thread = new std::thread(workerThread, this, sem);
+void Thread::run(std::counting_semaphore<SLOTS>& sem) {
+    // _thread = new std::thread(workerThread, this, std::ref(sem));
+    _thread = std::make_unique<std::thread>(&Thread::workerThread, this, std::ref(sem));
 }
 
 /*
@@ -69,7 +73,7 @@ void Thread::run(auto& sem) {
  Desc:
    This calls the do work function
 */
-void Thread::workerThread(Thread* aThread, auto& sem) {
+void Thread::workerThread(Thread* aThread, std::counting_semaphore<SLOTS>& sem) {
   aThread->doWork(sem);
 }
 
@@ -81,7 +85,7 @@ void Thread::workerThread(Thread* aThread, auto& sem) {
   This method calls the main process to wait until this thread is terminated
 */
 void Thread::wait() {
-  if (_thread != NULL) {
+  if (_thread && _thread->joinable()) {
     _thread->join();
   }
 }

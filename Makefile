@@ -1,7 +1,7 @@
 CXX := g++
 CXXFLAGS := -std=c++20 -Wall -Wextra -O2
 
-SRC := thread.cpp
+SRC := main.cpp thread.cpp
 OBJ := $(SRC:.cpp=.o)
 TARGET := main
 
