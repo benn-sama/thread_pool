@@ -1,8 +1,14 @@
 #include "thread.hpp"
+#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
+
+int randomTime() {
+    RandomNum random;
+    return random.getRandomNum(1000, 5000);
+}
 
 /*
  Method: 
@@ -11,8 +17,6 @@
  Desc:
    This constructor assings an id to this instance
 */
-
-
 Thread::Thread(uint16_t id) {
     this->id = id;
 }
@@ -27,23 +31,23 @@ Thread::Thread(uint16_t id) {
 
 void Thread::doWork(std::mutex& mutex, std::condition_variable& cv, int& ready) {
     using namespace std::literals::chrono_literals;
+    RandomNum random;
 
     while (true) {
       {
       std::unique_lock<std::mutex> lk(mutex);
       std::cout << id << ": Hello!" << std::endl;
       // -- THREAD WAITS HERE
-      cv.wait(lk, [&ready] { return ready == 1; });
+      cv.wait(lk, [&ready] { return ready > 0; });
 
       std::cout << id << ": wokeup\n";
       std::cout << id << ": working...\n";
       
       // reset ready
       ready = 0;
-      ++total_working;
       }
       
-      std::this_thread::sleep_for(5s);
+      std::this_thread::sleep_for(std::chrono::milliseconds(random.getRandomNum(1000, 10000)));
       std::cout << id << ": done!\n";
       std::cout << id << ": going back to sleep.\n";
     

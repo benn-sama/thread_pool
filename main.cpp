@@ -6,19 +6,12 @@
 #include <vector>
 #include <random>
 #include <mutex>
-
-// returns a random number
-int randomNum() {
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> dist(1, 10); // 1-10
-
-    return dist(rng);
-}
+#include <vector>
 
 // 70% probablity of being right
 bool correctNumber() {
-    return random() <= 7;
+    RandomNum random;
+    return random.getRandomNum(1, 10) <= 7;
 }
 
 int total_working = 0;
@@ -27,7 +20,7 @@ int main() {
     std::vector<Thread*> pool;
     const short THREAD_COUNT = 10;
     int count = 0;
-
+    std::vector<int> queue;
 
     std::mutex mutex;            // for locking
     std::condition_variable cv;  // for signaling
@@ -52,7 +45,8 @@ int main() {
         while (correctNumber()) {
             std::unique_lock<std::mutex> lk(mutex);
             if (total_working < 5) {
-                ++count; 
+                ++count;
+                ++total_working; 
                 std::cout << count << ": Signaling Thread" << std::endl;
 
                 ready = 1;
@@ -60,8 +54,6 @@ int main() {
 
                 cv.notify_one();
                 std::cout << count << ": Thread signaled" << std::endl;
-            } else {
-                std::cout << "-----------Queue is full. Waiting for an open spot.-----------";
             }
         }
     }
